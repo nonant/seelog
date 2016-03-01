@@ -32,8 +32,8 @@ import (
 )
 
 const (
-	staticFuncCallDepth = 3 // See 'commonLogger.log' method comments
-	loggerFuncCallDepth = 3
+	staticFuncCallDepth = 4 // See 'commonLogger.log' method comments
+	loggerFuncCallDepth = 4
 )
 
 // Current is the logger used in all package level convenience funcs like 'Trace', 'Debug', 'Flush', etc.
