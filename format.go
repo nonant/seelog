@@ -28,6 +28,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"net"
 	"strconv"
 	"strings"
 	"unicode"
@@ -101,6 +102,7 @@ var formatterFuncs = map[string]FormatterFunc{
 	"UTCNs":     formatterUTCNs,
 	"n":         formattern,
 	"t":         formattert,
+	"Host":      formatterHost,
 }
 
 var formatterFuncsParameterized = map[string]FormatterFuncCreator{
@@ -382,6 +384,32 @@ func formatterMsg(message string, level LogLevel, context LogContextInterface) i
 
 func formatterFullPath(message string, level LogLevel, context LogContextInterface) interface{} {
 	return context.FullPath()
+}
+
+var localHost, _ = GetLocalIP()
+
+func formatterHost(message string, level LogLevel, context LogContextInterface) interface{} {
+	return localHost
+}
+
+func GetLocalIP() (ip string, err error) {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		err = errors.New("InterfaceAddrs failed, err:" + err.Error())
+		return
+	}
+	for _, addr := range addrs {
+		switch addr.(type) {
+		case *net.IPNet:
+			tmp := addr.(*net.IPNet).IP
+			if tmp.IsGlobalUnicast() {
+				ip = tmp.String()
+				return
+			}
+		}
+	}
+	err = errors.New("failed to get local ip")
+	return
 }
 
 func formatterFile(message string, level LogLevel, context LogContextInterface) interface{} {
