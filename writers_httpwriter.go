@@ -59,64 +59,28 @@ func (fw *httpWriter) Close() error {
 
 // Create folder and file on WriteLog/Write first call
 func (fw *httpWriter) Write(bytes []byte) (n int, err error) {
+	if fw.url != "" {
+		messagebody := ioutil.NopCloser(strings.NewReader(string(bytes)))
 
-	messagebody := ioutil.NopCloser(strings.NewReader(string(bytes)))
+		client := &http.Client{}
+		r, err := http.NewRequest("POST", fw.url, messagebody)
+		if err != nil {
+			fmt.Println(err.Error())
+			return 0, err
+		}
 
-	client := &http.Client{}
-	r, err := http.NewRequest("POST", fw.url, messagebody)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
+		r.Header.Set("Content-Type", "application/x-www-form-urlencoded; param=value")
+
+		resp, err := client.Do(r)
+		if err != nil {
+			fmt.Println(err.Error())
+			return 0, err
+		}
+		defer resp.Body.Close()
 	}
-
-	r.Header.Set("Content-Type", "application/x-www-form-urlencoded; param=value")
-
-	resp, err := client.Do(r)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-	defer resp.Body.Close()
-
-	// _, err = ioutil.ReadAll(resp.Body)
-	// if err != nil {
-	// 	fmt.Println(err.Error())
-	// }
-
-	// if fw.innerWriter == nil {
-
-	// 	if err := fw.createFile(); err != nil {
-	// 		return 0, err
-	// 	}
-	// }
-	// return fw.innerWriter.Write(bytes)
 	return 0, nil
 }
 
-func (fw *fileWriter) createHttp() error {
-
-	/*
-		folder, _ := filepath.Split(fw.fileName)
-		var err error
-
-		if 0 != len(folder) {
-			err = os.MkdirAll(folder, defaultDirectoryPermissions)
-			if err != nil {
-				return err
-			}
-		}
-
-		// If exists
-		fw.innerWriter, err = os.OpenFile(fw.fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, defaultFilePermissions)
-
-		if err != nil {
-			return err
-		}
-	*/
-
-	return nil
-}
-
 func (fw *httpWriter) String() string {
-	return fmt.Sprintf("File writer: %s", fw.url)
+	return fmt.Sprintf("Http writer: %s", fw.url)
 }
