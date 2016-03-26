@@ -98,6 +98,8 @@ const (
 	connWriterReconnectOnMsgAttr     = "reconnectonmsg"
 	connWriterUseTLSAttr             = "tls"
 	connWriterInsecureSkipVerifyAttr = "insecureskipverify"
+	httpWriterID                     = "http"
+	httpWriterUrlAttr                = "url"
 )
 
 // CustomReceiverProducer is the signature of the function CfgParseParams needs to create
@@ -152,6 +154,7 @@ func init() {
 		bufferedWriterID:     {createbufferedWriter},
 		smtpWriterID:         {createSMTPWriter},
 		connWriterID:         {createconnWriter},
+		httpWriterID:         {createhttpWriter},
 	}
 
 	err := fillPredefinedFormats()
@@ -977,6 +980,31 @@ func createconnWriter(node *xmlNode, formatFromParent *formatter, formats map[st
 	connWriter := NewConnWriter(net, addr, reconnectOnMsg)
 
 	return NewFormattedWriter(connWriter, currentFormat)
+}
+
+func createhttpWriter(node *xmlNode, formatFromParent *formatter, formats map[string]*formatter, cfg *CfgParseParams) (interface{}, error) {
+	if node.hasChildren() {
+		return nil, errNodeCannotHaveChildren
+	}
+
+	err := checkUnexpectedAttribute(node, outputFormatID, httpWriterUrlAttr)
+	if err != nil {
+		return nil, err
+	}
+
+	currentFormat, err := getCurrentFormat(node, formatFromParent, formats)
+	if err != nil {
+		return nil, err
+	}
+
+	url, isurl := node.attributes[httpWriterUrlAttr]
+	if !isurl {
+		return nil, newMissingArgumentError(node.name, httpWriterUrlAttr)
+	}
+
+	httpWriter := NewHttpWriter(url)
+
+	return NewFormattedWriter(httpWriter, currentFormat)
 }
 
 func createRollingFileWriter(node *xmlNode, formatFromParent *formatter, formats map[string]*formatter, cfg *CfgParseParams) (interface{}, error) {
