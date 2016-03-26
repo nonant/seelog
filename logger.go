@@ -28,6 +28,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 )
 
@@ -362,7 +363,11 @@ func newLogFormattedMessage(format string, params []interface{}) *logFormattedMe
 }
 
 func (message *logMessage) String() string {
-	return fmt.Sprint(message.params...)
+	data := []string{}
+	for _, v := range message.params {
+		data = append(data, fmt.Sprint(v))
+	}
+	return strings.Join(data, " ")
 }
 
 func (message *logFormattedMessage) String() string {
